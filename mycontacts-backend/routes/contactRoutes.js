@@ -5,6 +5,10 @@ router.get('/',(req,res)=>{
     res.status(200).json({message:"Get all contacts"})
 })
 
+router.get('/:id',(req,res)=>{
+    res.status(200).json({message:`Getting contacts for ${req.params.id}`})
+})
+
 router.post('/',(req,res)=>{
     res.status(200).json({message:"Created Contact"})
 })
