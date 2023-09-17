@@ -1,6 +1,8 @@
 const asyncHandler = require("express-async-handler");
 const User = require("../models/userModel")
+const jwt  = require('jsonwebtoken')
 const bcrypt = require("bcrypt")
+const dotevn = require('dotenv').config();
 
 //@desc Register User
 //@route POST /api/users/register
@@ -37,7 +39,35 @@ const registerUser = asyncHandler(async(req,res)=>{
 //@route POST /api/users/login
 //@access public
 const loginUser = asyncHandler(async(req,res)=>{
-    res.json({message:"login the user"})
+    const {email,password} = req.body;
+    if( !email || !password){
+        res.status(400);
+        throw new Error('all fields are mandatory !')
+    }
+    const userAvailable = await User.findOne({email});
+    if (userAvailable && (await bcrypt.compare(password, userAvailable.password))){
+        const accessToken = jwt.sign({
+            user:{
+                username:userAvailable.username,
+                email:userAvailable.email,
+                id:userAvailable.id,
+            }
+        },
+        process.env.ACCESS_TOKEN_SECERT,
+        {
+            expiresIn:"5m"
+        }
+        )
+        console.log(accessToken);
+        res.status(201).json({accessToken})
+      
+    }else{
+        res.status(400);
+        throw new Error("Incorrent email or password")
+    }
+
+    
+
 })
 
 
@@ -45,7 +75,7 @@ const loginUser = asyncHandler(async(req,res)=>{
 //@route Get /api/users/current
 //@access private
 const currentUser = asyncHandler(async (req,res)=>{
-    res.json({message:"this is the current user"})
+    res.json(req.user)
 })
 
 module.exports = {
